@@ -14,7 +14,7 @@ from app.database.database import (
     execute_query,
     execute_write_query,
     execute_transaction,
-    db_connection
+    get_db_connection
 )
 from app.services.client_service import determine_payment_status, calculate_missing_payments
 from app.utils.enums import FeeType
@@ -213,7 +213,7 @@ async def update_payment(payment_id: int, payment_data: dict[str, Any]) -> int:
     
     Returns: ID of the updated payment
     """
-    async with db_connection() as conn:
+    async with get_db_connection() as conn:
         async with conn.execute("BEGIN") as _:
             try:
                 # First, soft-delete the current payment

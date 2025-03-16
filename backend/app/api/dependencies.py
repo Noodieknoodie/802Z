@@ -8,7 +8,7 @@ such as database sessions and pagination.
 from typing import Any
 from fastapi import Depends, Query
 
-from app.database.database import db_connection
+from app.database.database import get_db_connection
 
 async def get_db():
     """
@@ -16,7 +16,7 @@ async def get_db():
     
     Returns: Database connection object
     """
-    async with db_connection() as conn:
+    async with get_db_connection() as conn:
         yield conn
 
 def pagination_params(

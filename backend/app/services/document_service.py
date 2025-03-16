@@ -15,7 +15,7 @@ from typing import Any, Optional, BinaryIO
 from fastapi import UploadFile
 
 from app.core.config import PATHS
-from app.database.database import execute_query, execute_write_query, db_connection
+from app.database.database import execute_query, execute_write_query, get_db_connection
 
 async def get_document_path(document_id: int) -> Optional[Path]:
     """
@@ -126,13 +126,29 @@ async def store_document(
     params = (client_id, original_filename, onedrive_path, description)
     
     try:
-        file_id = await execute_write_query(query, params)
-        return file_id
+        async with get_db_connection() as conn:
+            async with conn.execute("BEGIN") as _:
+                try:
+                    # Insert the file record
+                    file_id = await execute_write_query(query, params)
+                    
+                    # Remove payment associations
+                    await conn.execute(
+                        "DELETE FROM payment_files WHERE file_id = ?",
+                        (file_id,)
+                    )
+                    
+                    await conn.commit()
+                    return file_id
+                except Exception as e:
+                    await conn.rollback()
+                    # If database insert fails, delete the file to prevent orphaned files
+                    if file_path.exists():
+                        os.remove(file_path)
+                    print(f"Error creating file record: {str(e)}")
+                    return None
     except Exception as e:
-        # If database insert fails, delete the file to prevent orphaned files
-        if file_path.exists():
-            os.remove(file_path)
-        print(f"Error creating file record: {str(e)}")
+        print(f"Error accessing database: {str(e)}")
         return None
 
 async def associate_document_with_payment(file_id: int, payment_id: int) -> bool:
@@ -162,10 +178,18 @@ async def associate_document_with_payment(file_id: int, payment_id: int) -> bool
     """
     
     try:
-        await execute_write_query(query, (payment_id, file_id))
-        return True
+        async with get_db_connection() as conn:
+            async with conn.execute("BEGIN") as _:
+                try:
+                    await execute_write_query(query, (payment_id, file_id))
+                    await conn.commit()
+                    return True
+                except Exception as e:
+                    await conn.rollback()
+                    print(f"Error associating document: {str(e)}")
+                    return False
     except Exception as e:
-        print(f"Error associating document: {str(e)}")
+        print(f"Error accessing database: {str(e)}")
         return False
 
 async def get_payment_documents(payment_id: int) -> list[dict[str, Any]]:
@@ -212,7 +236,7 @@ async def delete_document(document_id: int) -> bool:
     if not document_path:
         return False  # Document not found
     
-    async with db_connection() as conn:
+    async with get_db_connection() as conn:
         async with conn.execute("BEGIN") as _:
             try:
                 # Remove payment associations

@@ -10,7 +10,7 @@ from app.utils.user_utils import get_user_base_path, validate_db_path
 APP_MODE = os.environ.get("APP_MODE", "auto").lower()  # 'home', 'office', or 'auto'
 
 # Path to local database (for home mode)
-LOCAL_DB_PATH = Path(__file__).parent.parent / "data" / "401k_payments.db"
+LOCAL_DB_PATH = Path(__file__).parent.parent.parent / "data" / "401k_payments.db"
 
 # Get base path (for office mode)
 BASE_PATH = get_user_base_path()
