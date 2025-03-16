@@ -1,0 +1,10 @@
+# backend/requirements.txt
+fastapi
+uvicorn
+python-multipart
+pydantic
+aiosqlite
+pytest
+httpx
+msal
+requests
