@@ -24,7 +24,7 @@ CREATE TABLE "client_metrics" (
 	"avg_quarterly_payment"	REAL,
 	"last_recorded_assets"	REAL,
 	"last_updated"	TEXT,
-	"next_payment_due"	TEXT,
+	"next_payment_due"	TEXT, last_payment_month INTEGER,
 	UNIQUE("client_id"),
 	PRIMARY KEY("id" AUTOINCREMENT),
 	FOREIGN KEY("client_id") REFERENCES "clients"("client_id") ON DELETE CASCADE
@@ -75,7 +75,7 @@ CREATE TABLE "contracts" (
 	"num_people"	INTEGER,
 	"notes"	TEXT,
 	"valid_from"	DATETIME DEFAULT CURRENT_TIMESTAMP,
-	"valid_to"	DATETIME,
+	"valid_to"	DATETIME, provider_id INTEGER REFERENCES providers(provider_id),
 	PRIMARY KEY("contract_id" AUTOINCREMENT),
 	FOREIGN KEY("client_id") REFERENCES "clients"("client_id") ON DELETE CASCADE
 );
@@ -118,6 +118,16 @@ CREATE TABLE "payments" (
 	FOREIGN KEY("contract_id") REFERENCES "contracts"("contract_id") ON DELETE CASCADE
 );
 ----------------
+-- TABLE: providers
+----------------
+CREATE TABLE "providers" (
+    "provider_id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL UNIQUE,
+    "valid_from" DATETIME DEFAULT CURRENT_TIMESTAMP,
+    "valid_to" DATETIME,
+    PRIMARY KEY("provider_id" AUTOINCREMENT)
+);
+----------------
 -- TABLE: quarterly_summaries
 ----------------
 CREATE TABLE quarterly_summaries (
@@ -151,97 +161,23 @@ CREATE TABLE yearly_summaries (
     UNIQUE(client_id, year)
 );
 ----------------
--- VIEW: client_payment_status
+-- VIEW: client_payment_basic
 ----------------
-CREATE VIEW client_payment_status AS
+CREATE VIEW client_payment_basic AS
 SELECT
     c.client_id,
     c.display_name,
     ct.payment_schedule,
     ct.fee_type,
-    ct.flat_rate,
     ct.percent_rate,
-    -- Last payment information
+    ct.flat_rate,
+    cm.last_recorded_assets,
     cm.last_payment_date,
     cm.last_payment_amount,
     latest.applied_end_month,
     latest.applied_end_month_year,
     latest.applied_end_quarter,
-    latest.applied_end_quarter_year,
-    -- Calculate current period (based on today's date - 1 period)
-    CASE 
-        WHEN ct.payment_schedule = 'monthly' THEN 
-            CASE 
-                WHEN strftime('%m', 'now') = '01' THEN 12 
-                ELSE CAST(strftime('%m', 'now') AS INTEGER) - 1 
-            END
-        ELSE NULL
-    END AS current_month,
-    CASE 
-        WHEN ct.payment_schedule = 'monthly' THEN 
-            CASE 
-                WHEN strftime('%m', 'now') = '01' THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END
-        ELSE NULL
-    END AS current_month_year,
-    CASE 
-        WHEN ct.payment_schedule = 'quarterly' THEN 
-            CASE 
-                WHEN CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) = 1 THEN 4
-                ELSE CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) - 1
-            END
-        ELSE NULL
-    END AS current_quarter,
-    CASE 
-        WHEN ct.payment_schedule = 'quarterly' THEN 
-            CASE 
-                WHEN CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) = 1 THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END
-        ELSE NULL
-    END AS current_quarter_year,
-    -- Latest assets for calculating expected fee
-    cm.last_recorded_assets,
-    -- Calculate expected fee based on fee_type
-    CASE
-        WHEN ct.fee_type = 'flat' THEN ct.flat_rate
-        WHEN ct.fee_type = 'percentage' AND cm.last_recorded_assets IS NOT NULL THEN 
-            ROUND(cm.last_recorded_assets * (ct.percent_rate / 100.0), 2)
-        ELSE NULL
-    END AS expected_fee,
-    -- Determine payment status (Due/Paid)
-    CASE
-        WHEN ct.payment_schedule = 'monthly' AND (
-            latest.applied_end_month_year IS NULL OR
-            latest.applied_end_month_year < CASE 
-                WHEN strftime('%m', 'now') = '01' THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END OR
-            (latest.applied_end_month_year = CASE 
-                WHEN strftime('%m', 'now') = '01' THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END AND latest.applied_end_month < CASE 
-                WHEN strftime('%m', 'now') = '01' THEN 12 
-                ELSE CAST(strftime('%m', 'now') AS INTEGER) - 1 
-            END)
-        ) THEN 'Due'
-        WHEN ct.payment_schedule = 'quarterly' AND (
-            latest.applied_end_quarter_year IS NULL OR
-            latest.applied_end_quarter_year < CASE 
-                WHEN CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) = 1 THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END OR
-            (latest.applied_end_quarter_year = CASE 
-                WHEN CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) = 1 THEN CAST(strftime('%Y', 'now') AS INTEGER) - 1
-                ELSE CAST(strftime('%Y', 'now') AS INTEGER)
-            END AND latest.applied_end_quarter < CASE 
-                WHEN CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) = 1 THEN 4
-                ELSE CAST((strftime('%m', 'now') + 2) / 3 AS INTEGER) - 1
-            END)
-        ) THEN 'Due'
-        ELSE 'Paid'
-    END AS payment_status
+    latest.applied_end_quarter_year
 FROM 
     clients c
 JOIN 
@@ -352,6 +288,187 @@ SELECT
         ELSE NULL
     END AS quarterly_flat_rate
 FROM contracts c;
+----------------
+-- VIEW: frontend_client_details
+----------------
+CREATE VIEW frontend_client_details AS
+SELECT
+    c.client_id AS id,
+    c.display_name AS name,
+    ct.provider_id AS providerId,
+    p.name AS providerName,
+    ct.num_people AS participants,
+    CASE 
+        WHEN c.ima_signed_date IS NOT NULL THEN date(c.ima_signed_date)
+        ELSE NULL
+    END AS clientSince,
+    ct.fee_type AS feeType,
+    CASE
+        WHEN ct.fee_type = 'percentage' THEN ct.percent_rate
+        WHEN ct.fee_type = 'flat' THEN ct.flat_rate
+        ELSE NULL
+    END AS rate,
+    ct.payment_schedule AS paymentSchedule,
+    json_object(
+        'monthly', crd.monthly_percent_rate,
+        'quarterly', crd.quarterly_percent_rate,
+        'annual', crd.annual_percent_rate
+    ) AS percentRateBreakdown,
+    json_object(
+        'monthly', crd.monthly_flat_rate,
+        'quarterly', crd.quarterly_flat_rate,
+        'annual', crd.annual_flat_rate
+    ) AS flatRateBreakdown,
+    cm.last_payment_date AS lastPaymentDate,
+    cm.last_payment_amount AS lastPaymentAmount,
+    CASE
+        WHEN ct.payment_schedule = 'monthly' AND cm.last_payment_month IS NOT NULL THEN
+            CASE 
+                WHEN cm.last_payment_month = 1 THEN 'Jan'
+                WHEN cm.last_payment_month = 2 THEN 'Feb'
+                WHEN cm.last_payment_month = 3 THEN 'Mar'
+                WHEN cm.last_payment_month = 4 THEN 'Apr'
+                WHEN cm.last_payment_month = 5 THEN 'May'
+                WHEN cm.last_payment_month = 6 THEN 'Jun'
+                WHEN cm.last_payment_month = 7 THEN 'Jul'
+                WHEN cm.last_payment_month = 8 THEN 'Aug'
+                WHEN cm.last_payment_month = 9 THEN 'Sep'
+                WHEN cm.last_payment_month = 10 THEN 'Oct'
+                WHEN cm.last_payment_month = 11 THEN 'Nov'
+                WHEN cm.last_payment_month = 12 THEN 'Dec'
+            END || ' ' || cm.last_payment_year
+        WHEN ct.payment_schedule = 'quarterly' AND cm.last_payment_quarter IS NOT NULL THEN
+            'Q' || cm.last_payment_quarter || ' ' || cm.last_payment_year
+        ELSE NULL
+    END AS lastPaymentPeriod,
+    latest_payment.expected_fee AS lastPaymentExpected,
+    latest_payment.actual_fee AS lastPaymentActual,
+    latest_payment.variance AS lastPaymentVariance,
+    cm.last_recorded_assets AS lastRecordedAUM,
+    CASE
+        WHEN cps.current_month IS NOT NULL THEN
+            CASE 
+                WHEN cps.current_month = 1 THEN 'Jan'
+                WHEN cps.current_month = 2 THEN 'Feb'
+                WHEN cps.current_month = 3 THEN 'Mar'
+                WHEN cps.current_month = 4 THEN 'Apr'
+                WHEN cps.current_month = 5 THEN 'May'
+                WHEN cps.current_month = 6 THEN 'Jun'
+                WHEN cps.current_month = 7 THEN 'Jul'
+                WHEN cps.current_month = 8 THEN 'Aug'
+                WHEN cps.current_month = 9 THEN 'Sep'
+                WHEN cps.current_month = 10 THEN 'Oct'
+                WHEN cps.current_month = 11 THEN 'Nov'
+                WHEN cps.current_month = 12 THEN 'Dec'
+            END || ' ' || cps.current_month_year
+        WHEN cps.current_quarter IS NOT NULL THEN
+            'Q' || cps.current_quarter || ' ' || cps.current_quarter_year
+        ELSE NULL
+    END AS currentPeriod,
+    cps.payment_status AS currentStatus
+FROM 
+    clients c
+JOIN 
+    contracts ct ON c.client_id = ct.client_id AND ct.valid_to IS NULL
+LEFT JOIN
+    providers p ON ct.provider_id = p.provider_id
+LEFT JOIN
+    contract_rate_display crd ON ct.contract_id = crd.contract_id
+LEFT JOIN
+    client_metrics cm ON c.client_id = cm.client_id
+LEFT JOIN
+    client_payment_status cps ON c.client_id = cps.client_id
+LEFT JOIN (
+    SELECT *
+    FROM payments
+    WHERE payment_id IN (
+        SELECT MAX(payment_id)
+        FROM payments
+        WHERE valid_to IS NULL
+        GROUP BY client_id
+    )
+) latest_payment ON c.client_id = latest_payment.client_id
+WHERE 
+    c.valid_to IS NULL;
+----------------
+-- VIEW: frontend_client_list
+----------------
+CREATE VIEW frontend_client_list AS
+SELECT 
+    c.client_id AS id,
+    c.display_name AS name,
+    ct.provider_id AS providerId,
+    p.name AS providerName,
+    co.contact_name AS contact,
+    ct.num_people AS participants,
+    CASE 
+        WHEN c.ima_signed_date IS NOT NULL THEN date(c.ima_signed_date)
+        ELSE NULL
+    END AS clientSince,
+    cps.payment_status AS status
+FROM 
+    clients c
+JOIN 
+    contracts ct ON c.client_id = ct.client_id AND ct.valid_to IS NULL
+LEFT JOIN
+    providers p ON ct.provider_id = p.provider_id
+LEFT JOIN
+    contacts co ON c.client_id = co.client_id AND co.contact_type = 'Primary' AND co.valid_to IS NULL
+LEFT JOIN
+    client_payment_status cps ON c.client_id = cps.client_id
+WHERE 
+    c.valid_to IS NULL;
+----------------
+-- VIEW: frontend_payment_history
+----------------
+CREATE VIEW frontend_payment_history AS
+SELECT
+    p.payment_id AS id,
+    p.client_id AS clientId,
+    date(p.received_date) AS receivedDate,
+    CASE
+        WHEN ct.payment_schedule = 'monthly' AND p.applied_start_month IS NOT NULL THEN
+            CASE 
+                WHEN p.applied_start_month = 1 THEN 'Jan'
+                WHEN p.applied_start_month = 2 THEN 'Feb'
+                WHEN p.applied_start_month = 3 THEN 'Mar'
+                WHEN p.applied_start_month = 4 THEN 'Apr'
+                WHEN p.applied_start_month = 5 THEN 'May'
+                WHEN p.applied_start_month = 6 THEN 'Jun'
+                WHEN p.applied_start_month = 7 THEN 'Jul'
+                WHEN p.applied_start_month = 8 THEN 'Aug'
+                WHEN p.applied_start_month = 9 THEN 'Sep'
+                WHEN p.applied_start_month = 10 THEN 'Oct'
+                WHEN p.applied_start_month = 11 THEN 'Nov'
+                WHEN p.applied_start_month = 12 THEN 'Dec'
+            END || ' ' || p.applied_start_month_year
+        WHEN ct.payment_schedule = 'quarterly' AND p.applied_start_quarter IS NOT NULL THEN
+            'Q' || p.applied_start_quarter || ' ' || p.applied_start_quarter_year
+        ELSE NULL
+    END AS appliedPeriod,
+    p.total_assets AS aum,
+    p.expected_fee AS expectedFee,
+    p.actual_fee AS actualFee,
+    p.variance AS variance,
+    CASE
+        WHEN p.expected_fee IS NOT NULL AND p.expected_fee <> 0 THEN
+            (p.variance / p.expected_fee) * 100
+        ELSE NULL
+    END AS variancePercent,
+    p.method AS paymentType,
+    p.notes AS notes,
+    CASE WHEN pf.has_file = 1 THEN 1 ELSE 0 END AS hasAttachment,
+    pf.file_id AS attachmentId
+FROM 
+    payments p
+JOIN 
+    contracts ct ON p.contract_id = ct.contract_id
+LEFT JOIN
+    payment_file_view pf ON p.payment_id = pf.payment_id
+WHERE 
+    p.valid_to IS NULL
+ORDER BY 
+    p.received_date DESC;
 ----------------
 -- VIEW: payment_file_view
 ----------------

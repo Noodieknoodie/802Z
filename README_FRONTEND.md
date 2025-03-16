@@ -235,28 +235,79 @@ The wireframe handles all UI rendering, state management, formatting, and user i
 Here's a simplified example of the JSON structure the frontend requires:
 ```json
 {
-  "clients": [
-    { "id": "CL001", "name": "Accelerate Technologies", "providerId": "PR001", "providerName": "Fidelity Investments", ... }
-  ],
-  "providers": [
-    { "id": "PR001", "name": "Fidelity Investments", "clientCount": 5, "totalAssets": 78543250, ... }
-  ],
+  "clients": {
+    "CL001": {
+      "id": "CL001",
+      "name": "Accelerate Technologies",
+      "provider": "PR001",
+      "providerId": "PR001",
+      "providerName": "Fidelity Investments",
+      "paymentSchedule": "Monthly",
+      "feeType": "Percentage",
+      "rate": 0.0625,
+      "participants": 187,
+      "clientSince": "05/12/2019",
+      "lastAUM": 4783250,
+      "lastAUMDate": "02/15/2024",
+      "status": "Current"
+    },
+    "CL002": {
+      "id": "CL002",
+      "name": "Brightpath Solutions",
+      "provider": "PR002",
+      "providerId": "PR002",
+      "providerName": "Vanguard",
+      "paymentSchedule": "Quarterly",
+      "feeType": "Percentage",
+      "rate": 0.1875,
+      "participants": 124,
+      "clientSince": "08/23/2020",
+      "lastAUM": 6254780,
+      "lastAUMDate": "12/31/2023",
+      "status": "Current"
+    }
+  },
+  "providers": {
+    "PR001": {
+      "id": "PR001",
+      "name": "Fidelity Investments",
+      "clientCount": 5,
+      "totalAssets": 78543250,
+      "totalParticipants": 934
+    },
+    "PR002": {
+      "id": "PR002",
+      "name": "Vanguard",
+      "clientCount": 4,
+      "totalAssets": 54287600,
+      "totalParticipants": 712
+    }
+  },
   "clientDetails": {
-    "CL001": { 
-      "id": "CL001", 
+    "CL001": {
+      "id": "CL001",
       "name": "Accelerate Technologies",
       "feeType": "Percentage",
       "rate": 0.0625,
-      "rateBreakdown": { "monthly": 0.0625, "quarterly": 0.1875, "annual": 0.75 },
-      ...
+      "rateBreakdown": { 
+        "monthly": 0.0625, 
+        "quarterly": 0.1875, 
+        "annual": 0.75 
+      }
     }
   },
   "paymentHistory": {
     "CL001": [
-      { "id": "PMT001_CL001", "receivedDate": "03/05/2024", "appliedPeriod": "Feb 2024", "aum": 4783250, ... }
+      {
+        "id": "PMT001_CL001",
+        "receivedDate": "03/05/2024",
+        "appliedPeriod": "Feb 2024",
+        "aum": 4783250
+      }
     ]
   }
 }
+
 ```
 ## Integration Approach
 To successfully integrate your SQLite database with this frontend:

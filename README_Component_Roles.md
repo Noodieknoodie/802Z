@@ -19,7 +19,7 @@ Make direct database queries
 Cache large datasets client-side
 
 
-
+ 
 ## SQLite Database Roles
 
 DO:

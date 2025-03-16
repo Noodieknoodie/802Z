@@ -1,9 +1,86 @@
 ---
-description:
-globs:
+description: ANYTHING BACKEND
+globs: *.py, backend/
 ---
+Project Structure
+ALWAYS:
+Use proper package layout
+Implement modular design
+Follow Python standards
+Use proper configuration
+Maintain documentation
 
-# Your rule content
+NEVER:
+Mix package boundaries
+Skip project structure
+Ignore Python standards
+Use flat structure
 
-- You can @ files here
-- You can use markdown but dont have to
+Code Organization
+ALWAYS:
+Use proper imports
+Implement clean architecture
+Follow SOLID principles
+Use type hints
+Document code properly
+
+NEVER:
+Use circular imports
+Mix responsibilities
+Skip type annotations
+Ignore documentation
+
+Dependency Management
+ALWAYS:
+Use virtual environments
+Pin dependencies
+Use requirements files
+Handle dev dependencies
+Update regularly
+
+NEVER:
+Mix environment dependencies
+Use global packages
+Skip version pinning
+Ignore security updates
+
+Testing Strategy
+ALWAYS:
+Write unit tests
+Implement integration tests
+Use proper fixtures
+Test edge cases
+Measure coverage
+
+NEVER:
+Skip test documentation
+Mix test types
+Ignore test isolation
+Skip error scenarios
+
+Documentation:
+Write clear docstrings
+Maintain README
+Document APIs
+Include examples
+Keep docs updated
+
+Development Tools:
+Use proper IDE
+Configure debugger
+Use version control
+Implement CI/CD
+Use code analysis
+
+Best Practices:
+Follow PEP standards
+Keep code clean
+Handle errors properly
+Use proper logging
+Implement monitoring
+
+Remember:
+Focus on maintainability
+Keep code organized
+Handle errors properly
+Document thoroughly

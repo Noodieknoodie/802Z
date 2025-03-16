@@ -7,76 +7,231 @@ Provides routes for:
 - Creating new payments
 - Updating existing payments
 - Deleting payments
-- Getting payment documents
 """
+from fastapi import APIRouter, Depends, HTTPException, Path, Body, UploadFile, File, Form
+from typing import Any, Optional
 
-def get_payment_history(client_id):
-    """
-    GET /api/clients/{client_id}/payments
-    
-    Algorithm:
-    1. Validate client_id parameter
-    2. Extract pagination parameters (page, page_size)
-    3. Call database.models.get_client_payment_history(client_id, pagination)
-    4. Format response with pagination metadata
-    
-    This endpoint powers the payment history table and
-    provides both the payment data and pagination information.
-    
-    Returns: JSON response with array of payment objects and pagination metadata
-    """
-    pass
+from app.api.dependencies import get_db, pagination_params
+from app.database.models import (
+    get_client_payment_history,
+    create_payment,
+    update_payment,
+    delete_payment,
+    get_payment
+)
+from app.services.payment_service import (
+    prepare_payment_data,
+    validate_payment_data
+)
+from app.services.document_service import (
+    store_document,
+    associate_document_with_payment,
+    get_payment_documents
+)
 
-def create_payment(client_id):
-    """
-    POST /api/clients/{client_id}/payments
-    
-    Algorithm:
-    1. Validate client_id parameter
-    2. Extract payment data from request body
-    3. Parse period format from frontend to database format
-    4. Call services.payment_service to calculate expected fee
-    5. Call database.models.create_payment with processed data
-    6. Handle document attachment if provided
-    
-    This endpoint processes payment form submissions and
-    creates new payment records in the database.
-    
-    Returns: JSON response with newly created payment data
-    """
-    pass
+router = APIRouter(tags=["payments"])
 
-def update_payment(payment_id):
+@router.post("/api/clients/{client_id}/payments")
+async def create_new_payment(
+    client_id: int = Path(..., description="The client ID"),
+    payment_data: dict[str, Any] = Body(..., description="Payment data")
+):
     """
-    PUT /api/payments/{payment_id}
+    Create a new payment for a client.
     
-    Algorithm:
-    1. Validate payment_id parameter
-    2. Extract payment data from request body
-    3. Parse period format from frontend to database format
-    4. If AUM changed, recalculate expected fee
-    5. Call database.models.update_payment with processed data
-    6. Handle document attachment changes if any
-    
-    This endpoint processes payment edit form submissions and
-    updates existing payment records in the database.
-    
-    Returns: JSON response with updated payment data
+    Args:
+        client_id: Client ID
+        payment_data: Payment data
+        
+    Returns: Created payment ID and data
     """
-    pass
+    # Add client_id to payment data
+    payment_data["client_id"] = client_id
+    
+    # Validate payment data
+    is_valid, error_message = await validate_payment_data(payment_data)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_message)
+    
+    # Prepare payment data for database
+    try:
+        prepared_data = await prepare_payment_data(payment_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    # Create payment in database
+    payment_id = await create_payment(prepared_data)
+    
+    if not payment_id:
+        raise HTTPException(status_code=500, detail="Failed to create payment")
+    
+    # Get the created payment
+    created_payment = await get_payment(payment_id)
+    
+    return {
+        "id": payment_id,
+        "payment": created_payment
+    }
 
-def delete_payment(payment_id):
+@router.post("/api/clients/{client_id}/payments/with-document")
+async def create_payment_with_document(
+    client_id: int = Path(..., description="The client ID"),
+    payment_data: str = Form(..., description="Payment data as JSON string"),
+    document: Optional[UploadFile] = File(None, description="Payment document")
+):
     """
-    DELETE /api/payments/{payment_id}
+    Create a new payment with an attached document.
     
-    Algorithm:
-    1. Validate payment_id parameter
-    2. Call database.models.delete_payment(payment_id)
-    3. Return success/failure response
-    
-    This endpoint handles payment deletion requests from the
-    payment history table action buttons.
-    
-    Returns: JSON response confirming deletion
+    Args:
+        client_id: Client ID
+        payment_data: Payment data as JSON string
+        document: Optional document file
+        
+    Returns: Created payment ID with document info
     """
-    pass
+    import json
+    
+    # Parse payment data from form
+    try:
+        payment_dict = json.loads(payment_data)
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON in payment_data")
+    
+    # Add client_id to payment data
+    payment_dict["client_id"] = client_id
+    
+    # Validate payment data
+    is_valid, error_message = await validate_payment_data(payment_dict)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_message)
+    
+    # Prepare payment data for database
+    try:
+        prepared_data = await prepare_payment_data(payment_dict)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    # Create payment in database
+    payment_id = await create_payment(prepared_data)
+    
+    if not payment_id:
+        raise HTTPException(status_code=500, detail="Failed to create payment")
+    
+    # Handle document if provided
+    document_id = None
+    if document:
+        # Store document
+        document_id = await store_document(document, client_id)
+        
+        if document_id:
+            # Associate with payment
+            await associate_document_with_payment(document_id, payment_id)
+    
+    # Get the created payment
+    created_payment = await get_payment(payment_id)
+    
+    return {
+        "id": payment_id,
+        "payment": created_payment,
+        "document_id": document_id
+    }
+
+@router.put("/api/payments/{payment_id}")
+async def update_existing_payment(
+    payment_id: int = Path(..., description="The payment ID"),
+    payment_data: dict[str, Any] = Body(..., description="Updated payment data")
+):
+    """
+    Update an existing payment.
+    
+    Args:
+        payment_id: Payment ID
+        payment_data: Updated payment data
+        
+    Returns: Updated payment data
+    """
+    # Check if payment exists
+    existing_payment = await get_payment(payment_id)
+    if not existing_payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Validate payment data
+    is_valid, error_message = await validate_payment_data(payment_data)
+    if not is_valid:
+        raise HTTPException(status_code=400, detail=error_message)
+    
+    # Prepare payment data for update
+    try:
+        client_id = existing_payment.get("client_id")
+        payment_data["client_id"] = client_id
+        prepared_data = await prepare_payment_data(payment_data)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+    # Update payment in database
+    updated_payment_id = await update_payment(payment_id, prepared_data)
+    
+    if not updated_payment_id:
+        raise HTTPException(status_code=500, detail="Failed to update payment")
+    
+    # Get the updated payment
+    updated_payment = await get_payment(updated_payment_id)
+    
+    return {
+        "id": updated_payment_id,
+        "payment": updated_payment
+    }
+
+@router.delete("/api/payments/{payment_id}")
+async def delete_existing_payment(
+    payment_id: int = Path(..., description="The payment ID")
+):
+    """
+    Delete an existing payment.
+    
+    Args:
+        payment_id: Payment ID
+        
+    Returns: Success message
+    """
+    # Check if payment exists
+    existing_payment = await get_payment(payment_id)
+    if not existing_payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Delete payment from database
+    success = await delete_payment(payment_id)
+    
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete payment")
+    
+    return {
+        "success": True,
+        "message": f"Payment {payment_id} deleted successfully"
+    }
+
+@router.get("/api/payments/{payment_id}")
+async def get_payment_details(
+    payment_id: int = Path(..., description="The payment ID")
+):
+    """
+    Get details for a specific payment.
+    
+    Args:
+        payment_id: Payment ID
+        
+    Returns: Payment details
+    """
+    # Get payment from database
+    payment = await get_payment(payment_id)
+    
+    if not payment:
+        raise HTTPException(status_code=404, detail="Payment not found")
+    
+    # Get associated documents
+    documents = await get_payment_documents(payment_id)
+    
+    return {
+        "payment": payment,
+        "documents": documents
+    }

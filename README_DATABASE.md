@@ -459,7 +459,9 @@ The system handles both monthly and quarterly payment schedules:
    - Database → Frontend: Views convert numeric fields to formatted strings
    - Frontend → Database: Backend parses strings back to numeric values
 
-### Client Status Calculation
+
+
+### Client Status Calculation (MIGRATED OUT OF DB, NOW HANDLED IN PYTHON)
 
 The client payment status is determined as follows:
 
@@ -468,7 +470,11 @@ The client payment status is determined as follows:
 3. If the last payment period is before the current period, status is "Due"
 4. Otherwise, status is "Paid"
 
-This logic is implemented in the `client_payment_status` view.
+This logic is implemented in the Python backend using `client_service.py` functions:
+- `determine_payment_status()`: Calculates "Due" or "Paid" status
+- `calculate_missing_payments()`: Determines which specific periods are missing
+
+The frontend views still reference a placeholder `client_payment_status` view, but the actual status data is injected by the Python backend before sending to the frontend.
 
 ### Fee Calculation
 

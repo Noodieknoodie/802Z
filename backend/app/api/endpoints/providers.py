@@ -6,42 +6,43 @@ Provides routes for:
 - Listing all providers
 - Getting clients by provider
 """
+from fastapi import APIRouter, Depends, HTTPException, Path
+from typing import Any
 
-def get_all_providers():
+from app.database.models import get_providers, get_provider_clients
+
+router = APIRouter(
+    prefix="/api/providers",
+    tags=["providers"],
+)
+
+@router.get("")
+async def get_all_providers():
     """
     GET /api/providers
     
-    Algorithm:
-    1. Query database for all active providers (valid_to IS NULL)
-    2. For each provider, aggregate:
-       - Total client count
-       - Total assets under management
-       - Total participant count
-    3. Format response according to frontend expectations
-    
-    Why aggregation matters:
-    - Provider sidebar view shows summary metrics
-    - Reduces need for multiple client-side calculations
-    - Provides consistent provider data
-    
     Returns: JSON response with array of provider objects including aggregated stats
     """
-    pass
+    providers = await get_providers()
+    return {"providers": providers}
 
-def get_provider_clients(provider_id):
+@router.get("/{provider_id}/clients")
+async def get_provider_clients_endpoint(
+    provider_id: int = Path(..., description="The provider ID")
+):
     """
     GET /api/providers/{provider_id}/clients
     
-    Algorithm:
-    1. Validate provider_id parameter
-    2. Query frontend_client_list view with providerId filter
-    3. Sort clients by name for consistent display
-    4. Format response to match frontend expectations
-    
-    This endpoint is called when:
-    - User expands a provider in the sidebar
-    - User clicks on a provider to see all its clients
-    
     Returns: JSON response with array of client objects belonging to the provider
     """
-    pass
+    clients = await get_provider_clients(provider_id)
+    
+    if not clients and provider_id > 0:
+        # Check if provider exists
+        providers = await get_providers()
+        provider_exists = any(p.get("id") == provider_id for p in providers)
+        
+        if not provider_exists:
+            raise HTTPException(status_code=404, detail="Provider not found")
+    
+    return {"clients": clients}

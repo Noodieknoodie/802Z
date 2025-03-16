@@ -7,52 +7,71 @@ Provides routes for:
 - Getting client details
 - Getting client payment history
 """
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from typing import Any
 
-def get_all_clients():
+from app.api.dependencies import get_db, pagination_params
+from app.database.models import (
+    get_all_clients,
+    get_client_details,
+    get_client_payment_history
+)
+from app.services.client_service import get_frontend_client_data
+
+router = APIRouter(
+    prefix="/api/clients",
+    tags=["clients"],
+)
+
+@router.get("")
+async def get_clients():
     """
     GET /api/clients
     
-    Algorithm:
-    1. Call database.models.get_all_clients()
-    2. Handle query parameters for filtering and sorting
-    3. Format response to match frontend expectations
-    
-    This endpoint powers the client sidebar list and provides
-    the base client data needed by the frontend.
-    
     Returns: JSON response with array of client objects
     """
-    pass
+    clients = await get_all_clients()
+    return {"clients": clients}
 
-def get_client_details(client_id):
+@router.get("/data")
+async def get_frontend_data():
+    """
+    GET /api/clients/data
+    
+    Returns: Complete frontend data structure
+    """
+    return await get_frontend_client_data()
+
+@router.get("/{client_id}")
+async def get_client(
+    client_id: int = Path(..., description="The client ID")
+):
     """
     GET /api/clients/{client_id}
     
-    Algorithm:
-    1. Validate client_id parameter
-    2. Call database.models.get_client_details(client_id)
-    3. Enrich with status information and missing payments
-    4. Format nested objects (rateBreakdown, lastRecordedAUM, etc.)
-    
-    This endpoint provides the detailed client information
-    displayed in the client details panel.
-    
     Returns: JSON response with detailed client object
     """
-    pass
+    client = await get_client_details(client_id)
+    
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    
+    return client
 
-def get_client_providers():
+@router.get("/{client_id}/payments")
+async def get_client_payments(
+    client_id: int = Path(..., description="The client ID"),
+    pagination: dict[str, int] = Depends(pagination_params)
+):
     """
-    GET /api/providers
+    GET /api/clients/{client_id}/payments
     
-    Algorithm:
-    1. Call database.models.get_providers()
-    2. Handle query parameters for filtering and sorting
-    3. Format response to match frontend expectations
-    
-    This endpoint supports the provider view in the sidebar,
-    showing providers with their client counts and total assets.
-    
-    Returns: JSON response with array of provider objects
+    Returns: JSON response with array of payment objects and pagination metadata
     """
-    pass
+    payment_history = await get_client_payment_history(
+        client_id, 
+        page=pagination["page"], 
+        page_size=pagination["page_size"]
+    )
+    
+    return payment_history

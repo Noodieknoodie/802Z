@@ -1,6 +1,7 @@
 ----------------
 SAMPLE DATA
 ----------------
+
 -- TABLE: client_files
 file_id, client_id, file_name, onedrive_path, uploaded_at
 63, 6, John Hancock - 401K Adivsor Fee Bellmont AirSea Benevon MFM, FlorForm, 3 Sigma 2.24.25.pdf, Bellmont Cabinets\Consulting Fee\2025\John Hancock - 401K Adivsor Fee Bellmont AirSea Benevon MFM, FlorForm, 3 Sigma 2.24.25.pdf, 2025-02-24
@@ -12,17 +13,19 @@ file_id, client_id, file_name, onedrive_path, uploaded_at
 92, 28, Empower - 401K Advisor Fee -Fast Water & Younker 11.20.24.pdf, Younker Motors\Consulting Fee\Empower - 401K Advisor Fee -Fast Water & Younker 11.20.24.pdf, 2024-11-20
 93, 19, Ascensus - 401k Advisor Fee-Q4-24- Opportunity Interactive - rcvd 1.22.25.pdf, Opportunity Interactive\Consulting Fee\Ascensus - 401k Advisor Fee-Q4-24- Opportunity Interactive - rcvd 1.22.25.pdf, 2025-01-22
 94, 27, Capital Grp -Advisor Fee xFire chk rcvd 2.3.25.pdf, XFire Industries\Consulting Fee\Capital Grp -Advisor Fee xFire chk rcvd 2.3.25.pdf, 2025-02-03
+
 -- TABLE: client_metrics
-id, client_id, last_payment_date, last_payment_amount, last_payment_quarter, last_payment_year, total_ytd_payments, avg_quarterly_payment, last_recorded_assets, last_updated, next_payment_due
-1, 1, 2024-11-19, 909.06, 3, 2024, NULL, NULL, 1368616.0, 2025-03-11 21:29:23, 2025-06-01
-2, 2, 2024-07-31, 1906.77, 2, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01
-3, 3, 2024-07-31, 666.66, 2, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01
-14, 14, 2024-10-16, 3750.0, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01
-15, 15, 2024-11-18, 54.13, 4, 2024, NULL, NULL, 129908.0, 2025-03-11 21:29:23, 2025-06-01
-16, 16, 2024-10-21, 3500.0, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01
-27, 27, 2024-10-22, 141.42, 3, 2024, NULL, NULL, 56262.0, 2025-03-11 21:29:23, 2025-06-01
-28, 28, 2024-11-20, 1420.06, 3, 2024, NULL, NULL, 2130101.0, 2025-03-11 21:29:23, 2025-06-01
-29, 29, 2024-10-14, 1043.09, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01
+id, client_id, last_payment_date, last_payment_amount, last_payment_quarter, last_payment_year, total_ytd_payments, avg_quarterly_payment, last_recorded_assets, last_updated, next_payment_due, last_payment_month
+1, 1, 2024-11-19, 909.06, 3, 2024, NULL, NULL, 1368616.0, 2025-03-11 21:29:23, 2025-06-01, NULL
+2, 2, 2024-07-31, 1906.77, 2, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01, NULL
+3, 3, 2024-07-31, 666.66, 2, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01, NULL
+14, 14, 2024-10-16, 3750.0, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01, NULL
+15, 15, 2024-11-18, 54.13, 4, 2024, NULL, NULL, 129908.0, 2025-03-11 21:29:23, 2025-06-01, NULL
+16, 16, 2024-10-21, 3500.0, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01, NULL
+27, 27, 2024-10-22, 141.42, 3, 2024, NULL, NULL, 56262.0, 2025-03-11 21:29:23, 2025-06-01, NULL
+28, 28, 2024-11-20, 1420.06, 3, 2024, NULL, NULL, 2130101.0, 2025-03-11 21:29:23, 2025-06-01, NULL
+29, 29, 2024-10-14, 1043.09, 3, 2024, NULL, NULL, NULL, 2025-03-11 21:29:23, 2025-06-01, NULL
+
 -- TABLE: clients
 client_id, display_name, full_name, ima_signed_date, onedrive_folder_path, valid_from, valid_to
 1, AirSea America, THE TRUSTEES OF AIRSEA AMERICA INC 401K PLAN AND TRUST, 2020-07-31, NULL, 2025-03-14 04:04:16, NULL
@@ -34,6 +37,7 @@ client_id, display_name, full_name, ima_signed_date, onedrive_folder_path, valid
 27, XFire, XFIRE INDUSTRIES INC 401K PLAN, NULL, NULL, 2025-03-14 04:04:16, NULL
 28, Younker Motors, YOUNKER MOTORS, 2020-07-30, NULL, 2025-03-14 04:04:16, NULL
 29, Youth Dynamics, YOUTH DYNAMICS, NULL, NULL, 2025-03-14 04:04:16, NULL
+
 -- TABLE: contacts
 contact_id, client_id, contact_type, contact_name, phone, email, fax, physical_address, mailing_address, valid_from, valid_to
 1, 1, Primary, Donald Jay, 253-395-9551, djay@asamerica.com, NULL, 3500 West Vally HWY, Ste B-106, Auburn, WA 98001, 3500 West Vally HWY, Ste B-106, Auburn, WA 98001, 2025-03-14 04:04:33, NULL
@@ -45,19 +49,21 @@ contact_id, client_id, contact_type, contact_name, phone, email, fax, physical_a
 66, 26, Provider, Austin Del Prado, 800-333-0963, delprau@jhancock.com, NULL, 601 Congress St, Boston, MA 02210, NULL, 2025-03-14 04:04:33, NULL
 67, 27, Provider, Brett Lundgren, 866-421-2137, Brett.Lundgren@capgroup.com, NULL, NULL, NULL, 2025-03-14 04:04:33, NULL
 68, 29, Provider, Maria Viala-Wood, NULL, maria.vialawood@transamerica.com, NULL, NULL, NULL, 2025-03-14 04:04:33, NULL
+
 -- TABLE: contracts
-contract_id, client_id, contract_number, provider_name, contract_start_date, fee_type, percent_rate, flat_rate, payment_schedule, num_people, notes, valid_from, valid_to
-1, 1, 134565, John Hancock, 2018-03-22, percentage, 0.0007, NULL, monthly, 18, Phone: 800-333-0963 Option 1 with Contract # or Option 2, ext 154617
-Fax: General Info 866-377-9577  Enrollment Forms 866-377-8846 
-, 2025-03-14 04:04:26, NULL
-2, 2, NULL, Voya, 2019-04-19, percentage, 0.000416, NULL, monthly, 35, NULL, 2025-03-14 04:04:26, NULL
-3, 3, 551296, Voya, NULL, flat, NULL, 666.66, monthly, NULL, NULL, 2025-03-14 04:04:26, NULL
-17, 17, NULL, Capital Group / American Funds, NULL, flat, NULL, 1000.0, quarterly, 15, NULL, 2025-03-14 04:04:26, NULL
-18, 18, 24277, Fidelity, NULL, flat, NULL, 2499.99, quarterly, 32, NULL, 2025-03-14 04:04:26, NULL
-19, 19, NULL, Ascensus, NULL, flat, NULL, 2000.0, quarterly, 18, NULL, 2025-03-14 04:04:26, NULL
-33, 16, NULL, Empower, NULL, flat, NULL, 3500.0, quarterly, NULL, NULL, 2025-03-14 04:04:26, NULL
-34, 28, NULL, Empower, NULL, percentage, 0.000667, NULL, monthly, 43, NULL, 2025-03-14 04:04:26, NULL
-35, 29, NULL, Principal, NULL, percentage, 0.001875, NULL, quarterly, 15, NULL, 2025-03-14 04:04:26, NULL
+contract_id, client_id, contract_number, provider_name, contract_start_date, fee_type, percent_rate, flat_rate, payment_schedule, num_people, notes, valid_from, valid_to, provider_id
+1, 1, 134565, John Hancock, 2018-03-22, percentage, 0.0007, NULL, monthly, 18, Phone: 800-333-0963 Option 1 with Contract # or Option 2, ext 154617
+Fax: General Info 866-377-9577  Enrollment Forms 866-377-8846 
+, 2025-03-14 04:04:26, NULL, 8
+2, 2, NULL, Voya, 2019-04-19, percentage, 0.000416, NULL, monthly, 35, NULL, 2025-03-14 04:04:26, NULL, 12
+3, 3, 551296, Voya, NULL, flat, NULL, 666.66, monthly, NULL, NULL, 2025-03-14 04:04:26, NULL, 12
+17, 17, NULL, Capital Group / American Funds, NULL, flat, NULL, 1000.0, quarterly, 15, NULL, 2025-03-14 04:04:26, NULL, 3
+18, 18, 24277, Fidelity, NULL, flat, NULL, 2499.99, quarterly, 32, NULL, 2025-03-14 04:04:26, NULL, 6
+19, 19, NULL, Ascensus, NULL, flat, NULL, 2000.0, quarterly, 18, NULL, 2025-03-14 04:04:26, NULL, 1
+33, 16, NULL, Empower, NULL, flat, NULL, 3500.0, quarterly, NULL, NULL, 2025-03-14 04:04:26, NULL, 5
+34, 28, NULL, Empower, NULL, percentage, 0.000667, NULL, monthly, 43, NULL, 2025-03-14 04:04:26, NULL, 5
+35, 29, NULL, Principal, NULL, percentage, 0.001875, NULL, quarterly, 15, NULL, 2025-03-14 04:04:26, NULL, 10
+
 -- TABLE: payment_files
 payment_id, file_id, linked_at
 1054, 64, 2025-03-11 04:28:02
@@ -69,6 +75,7 @@ payment_id, file_id, linked_at
 1080, 94, 2025-03-11 04:28:02
 1081, 84, 2025-03-11 04:28:02
 1082, 92, 2025-03-11 04:28:02
+
 -- TABLE: payments
 payment_id, contract_id, client_id, received_date, total_assets, expected_fee, actual_fee, method, notes, valid_from, valid_to, applied_start_month, applied_start_month_year, applied_end_month, applied_end_month_year, applied_start_quarter, applied_start_quarter_year, applied_end_quarter, applied_end_quarter_year
 1, 1, 1, 2019-05-03, 824305, 542.01, 547.51, Auto - Check, waiting on how John Hancock calculates fee payments, 2025-03-14 03:57:29, NULL, 4, 2019, 4, 2019, NULL, NULL, NULL, NULL
@@ -80,6 +87,19 @@ payment_id, contract_id, client_id, received_date, total_assets, expected_fee, a
 1080, 27, 27, 2025-01-13, 61703.1, NULL, 155.1, Check, Period 10/01/2024 to 12/31/2024, 2025-03-14 03:57:29, NULL, NULL, NULL, NULL, NULL, 4, 2024, 4, 2024
 1081, 34, 28, 2025-01-15, 2009546.67, NULL, 1339.69, Check, Empower payment for December 2024, 2025-03-14 03:57:29, NULL, 12, 2024, 12, 2024, NULL, NULL, NULL, NULL
 1082, 34, 28, 2024-12-17, 2009948.21, NULL, 1339.97, Check, NULL, 2025-03-14 03:57:29, NULL, 11, 2024, 11, 2024, NULL, NULL, NULL, NULL
+
+-- TABLE: providers
+provider_id, name, valid_from, valid_to
+1, Ascensus, 2025-03-15 23:34:16, NULL
+2, Ascensus Trust Company, 2025-03-15 23:34:16, NULL
+3, Capital Group / American Funds, 2025-03-15 23:34:16, NULL
+6, Fidelity, 2025-03-15 23:34:16, NULL
+7, Hunnex & Shoemaker, 2025-03-15 23:34:16, NULL
+8, John Hancock, 2025-03-15 23:34:16, NULL
+10, Principal, 2025-03-15 23:34:16, NULL
+11, Transamerica, 2025-03-15 23:34:16, NULL
+12, Voya, 2025-03-15 23:34:16, NULL
+
 -- TABLE: quarterly_summaries
 id, client_id, year, quarter, total_payments, total_assets, payment_count, avg_payment, expected_total, last_updated
 1, 1, 2019, 1, 535.03, 805477.0, 1, 535.03, 547.28, 2025-02-27 08:45:17
@@ -91,6 +111,7 @@ id, client_id, year, quarter, total_payments, total_assets, payment_count, avg_p
 523, 19, 2024, 4, 2000.0, NULL, 1, 2000.0, NULL, 2025-03-11 03:55:57
 524, 26, 2024, 4, 6250.0, NULL, 1, 6250.0, NULL, 2025-03-11 03:55:57
 525, 27, 2024, 4, 155.1, 61703.1, 1, 155.1, NULL, 2025-03-11 03:55:57
+
 -- TABLE: yearly_summaries
 id, client_id, year, total_payments, total_assets, payment_count, avg_payment, yoy_growth, last_updated
 1, 1, 2019, 5051.950000000001, 835160.9375, 9, 554.7358333333334, NULL, 2025-02-27 08:45:17
@@ -102,17 +123,19 @@ id, client_id, year, total_payments, total_assets, payment_count, avg_payment, y
 175, 19, 2024, 8000.0, NULL, 4, 2000.0, NULL, 2025-03-11 03:55:57
 176, 26, 2024, 25000.0, NULL, 4, 6250.0, NULL, 2025-03-11 03:55:57
 177, 27, 2024, 535.99, 53570.525, 4, 133.9975, NULL, 2025-03-11 03:55:57
--- VIEW: client_payment_status
-client_id, display_name, payment_schedule, fee_type, flat_rate, percent_rate, last_payment_date, last_payment_amount, applied_end_month, applied_end_month_year, applied_end_quarter, applied_end_quarter_year, current_month, current_month_year, current_quarter, current_quarter_year, last_recorded_assets, expected_fee, payment_status
-1, AirSea America, monthly, percentage, NULL, 0.0007, 2024-11-19, 909.06, 1, 2025, NULL, NULL, 2, 2025, NULL, NULL, 1368616.0, 9.58, Due
-2, Bumgardner Architects (ABC), monthly, percentage, NULL, 0.000416, 2024-07-31, 1906.77, 6, 2024, NULL, NULL, 2, 2025, NULL, NULL, NULL, NULL, Due
-3, Amplero, monthly, flat, 666.66, NULL, 2024-07-31, 666.66, 6, 2024, NULL, NULL, 2, 2025, NULL, NULL, NULL, 666.66, Due
-17, Nordic Museum, quarterly, flat, 1000.0, NULL, 2024-05-20, 1000.0, NULL, NULL, 1, 2024, NULL, NULL, 4, 2024, NULL, 1000.0, Due
-18, Marten Law, quarterly, flat, 2499.99, NULL, 2024-10-16, 2499.99, NULL, NULL, 3, 2024, NULL, NULL, 4, 2024, NULL, 2499.99, Due
-19, Opportunity Interactive, quarterly, flat, 2000.0, NULL, 2024-10-16, 2000.0, NULL, NULL, 4, 2024, NULL, NULL, 4, 2024, NULL, 2000.0, Paid
-16, Lynnwood Honda, quarterly, flat, 3500.0, NULL, 2024-10-21, 3500.0, NULL, NULL, 3, 2024, NULL, NULL, 4, 2024, NULL, 3500.0, Due
-28, Younker Motors, monthly, percentage, NULL, 0.000667, 2024-11-20, 1420.06, 12, 2024, NULL, NULL, 2, 2025, NULL, NULL, 2130101.0, 14.21, Due
-29, Youth Dynamics, quarterly, percentage, NULL, 0.001875, 2024-10-14, 1043.09, NULL, NULL, 3, 2024, NULL, NULL, 4, 2024, NULL, NULL, Due
+
+-- VIEW: client_payment_basic
+client_id, display_name, payment_schedule, fee_type, percent_rate, flat_rate, last_recorded_assets, last_payment_date, last_payment_amount, applied_end_month, applied_end_month_year, applied_end_quarter, applied_end_quarter_year
+1, AirSea America, monthly, percentage, 0.0007, NULL, 1368616.0, 2024-11-19, 909.06, 1, 2025, NULL, NULL
+2, Bumgardner Architects (ABC), monthly, percentage, 0.000416, NULL, NULL, 2024-07-31, 1906.77, 6, 2024, NULL, NULL
+3, Amplero, monthly, flat, NULL, 666.66, NULL, 2024-07-31, 666.66, 6, 2024, NULL, NULL
+17, Nordic Museum, quarterly, flat, NULL, 1000.0, NULL, 2024-05-20, 1000.0, NULL, NULL, 1, 2024
+18, Marten Law, quarterly, flat, NULL, 2499.99, NULL, 2024-10-16, 2499.99, NULL, NULL, 3, 2024
+19, Opportunity Interactive, quarterly, flat, NULL, 2000.0, NULL, 2024-10-16, 2000.0, NULL, NULL, 4, 2024
+16, Lynnwood Honda, quarterly, flat, NULL, 3500.0, NULL, 2024-10-21, 3500.0, NULL, NULL, 3, 2024
+28, Younker Motors, monthly, percentage, 0.000667, NULL, 2130101.0, 2024-11-20, 1420.06, 12, 2024, NULL, NULL
+29, Youth Dynamics, quarterly, percentage, 0.001875, NULL, NULL, 2024-10-14, 1043.09, NULL, NULL, 3, 2024
+
 -- VIEW: contract_rate_display
 contract_id, client_id, provider_name, fee_type, payment_schedule, percent_rate, flat_rate, frequency_percent_rate, frequency_flat_rate, annual_percent_rate, monthly_percent_rate, quarterly_percent_rate, annual_flat_rate, monthly_flat_rate, quarterly_flat_rate
 1, 1, John Hancock, percentage, monthly, 0.0007, NULL, 0.0007, NULL, 0.0084, 0.0007, 0.0021, NULL, NULL, NULL
@@ -124,25 +147,4 @@ contract_id, client_id, provider_name, fee_type, payment_schedule, percent_rate,
 33, 16, Empower, flat, quarterly, NULL, 3500.0, NULL, 3500.0, NULL, NULL, NULL, 14000.0, 1166.6666666666667, 3500.0
 34, 28, Empower, percentage, monthly, 0.000667, NULL, 0.000667, NULL, 0.008003999999999999, 0.000667, 0.0020009999999999997, NULL, NULL, NULL
 35, 29, Principal, percentage, quarterly, 0.001875, NULL, 0.001875, NULL, 0.0075, 0.000625, 0.001875, NULL, NULL, NULL
--- VIEW: payment_file_view
-payment_id, client_id, contract_id, received_date, actual_fee, has_file, file_id, file_name, onedrive_path
-1, 1, 1, 2019-05-03, 547.51, 0, NULL, NULL, NULL
-2, 1, 1, 2019-06-07, 535.03, 0, NULL, NULL, NULL
-3, 1, 1, 2019-07-05, 557.54, 0, NULL, NULL, NULL
-466, 14, 14, 2019-10-08, 3750.0, 0, NULL, NULL, NULL
-467, 14, 14, 2020-01-13, 3750.0, 0, NULL, NULL, NULL
-468, 14, 14, 2020-04-13, 3750.0, 0, NULL, NULL, NULL
-1080, 27, 27, 2025-01-13, 155.1, 1, 94, Capital Grp -Advisor Fee xFire chk rcvd 2.3.25.pdf, XFire Industries\Consulting Fee\Capital Grp -Advisor Fee xFire chk rcvd 2.3.25.pdf
-1081, 28, 34, 2025-01-15, 1339.69, 1, 84, Empower - 401k Advisor FEe - Faster Water and Younker - chk rcvd 1.22.25.pdf, Younker Motors\Consulting Fee\Empower - 401k Advisor FEe - Faster Water and Younker - chk rcvd 1.22.25.pdf
-1082, 28, 34, 2024-12-17, 1339.97, 1, 92, Empower - 401K Advisor Fee -Fast Water & Younker 11.20.24.pdf, Younker Motors\Consulting Fee\Empower - 401K Advisor Fee -Fast Water & Younker 11.20.24.pdf
--- VIEW: payment_with_aum_fallback
-payment_id, contract_id, client_id, received_date, total_assets, expected_fee, actual_fee, method, notes, valid_from, valid_to, applied_start_month, applied_start_month_year, applied_end_month, applied_end_month_year, applied_start_quarter, applied_start_quarter_year, applied_end_quarter, applied_end_quarter_year, final_assets
-1, 1, 1, 2019-05-03, 824305, 542.01, 547.51, Auto - Check, waiting on how John Hancock calculates fee payments, 2025-03-14 03:57:29, NULL, 4, 2019, 4, 2019, NULL, NULL, NULL, NULL, 824305
-2, 1, 1, 2019-06-07, 805477, 547.28, 535.03, Auto - Check, NULL, 2025-03-14 03:57:29, NULL, 5, 2019, 5, 2019, NULL, NULL, NULL, NULL, 805477
-3, 1, 1, 2019-07-05, 839288, 551.86, 557.54, Auto - Check, NULL, 2025-03-14 03:57:29, NULL, 6, 2019, 6, 2019, NULL, NULL, NULL, NULL, 839288
-466, 14, 14, 2019-10-08, NULL, 3750.0, 3750.0, Auto - ACH, NULL, 2025-03-14 03:57:29, NULL, NULL, NULL, NULL, NULL, 3, 2019, 3, 2019, NULL
-467, 14, 14, 2020-01-13, NULL, 3750.0, 3750.0, Auto - ACH, Emailed received from Tom RE: this fee payment 1/15/2020 (Oct. Nov. Dec.), 2025-03-14 03:57:29, NULL, NULL, NULL, NULL, NULL, 4, 2019, 4, 2019, NULL
-468, 14, 14, 2020-04-13, NULL, 3750.0, 3750.0, Auto - ACH, Per statement received 4/13/2020, 2025-03-14 03:57:29, NULL, NULL, NULL, NULL, NULL, 1, 2020, 1, 2020, NULL
-1080, 27, 27, 2025-01-13, 61703.1, NULL, 155.1, Check, Period 10/01/2024 to 12/31/2024, 2025-03-14 03:57:29, NULL, NULL, NULL, NULL, NULL, 4, 2024, 4, 2024, 61703.1
-1081, 34, 28, 2025-01-15, 2009546.67, NULL, 1339.69, Check, Empower payment for December 2024, 2025-03-14 03:57:29, NULL, 12, 2024, 12, 2024, NULL, NULL, NULL, NULL, 2009546.67
-1082, 34, 28, 2024-12-17, 2009948.21, NULL, 1339.97, Check, NULL, 2025-03-14 03:57:29, NULL, 11, 2024, 11, 2024, NULL, NULL, NULL, NULL, 2009948.21
+
